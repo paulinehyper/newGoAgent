@@ -1,40 +1,48 @@
 const express = require('express');
 const app = express();
-const port = 5000;
-
-app.use(express.json());
-app.use(express.static('public'));
+const port = 3000;
 
 let command = "";
-let latestResult = null;
+let latestResult = {};
 
-// 에이전트가 명령 요청
+app.use(express.json());
+app.use(express.static('public')); // public/index.html 사용
+
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/public/index.html');
+});
+
+// 명령 요청 (에이전트가 주기적으로 호출)
 app.get('/api/command', (req, res) => {
   if (command) {
     res.send(command);
-    command = "";
+    command = ""; // 한 번만 전달
   } else {
-    res.status(204).send();
+    res.status(204).send(); // No Content
   }
 });
 
-// 에이전트가 결과 전송
+// 결과 수신 (에이전트가 전송)
 app.post('/api/result', (req, res) => {
-  console.log("에이전트로부터 수신:", req.body);
+  console.log("📥 에이전트 결과 수신:", req.body);
   latestResult = req.body;
   res.send("결과 수신 완료");
 });
 
-// 웹에서 명령 전송
+// 명령 전송 버튼 (웹 UI에서 호출)
 app.get('/send-command/:cmd', (req, res) => {
   command = req.params.cmd;
-  console.log(`명령 [${command}] 설정됨`);
-  res.json({ status: "ok" });
+  res.send(`명령 [${command}] 설정됨`);
 });
 
-// 결과 조회
+// 결과 조회 (웹 UI에서 폴링)
 app.get('/latest-result', (req, res) => {
-  res.json(latestResult || { status: "대기 중" });
+  res.json(latestResult);
+});
+
+// 기본 라우트
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/public/index.html');
 });
 
 app.listen(port, () => {
