@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Agent Control</title>
+</head>
+<body>
+  <h1>🖥️ 에이전트 명령 UI</h1>
+  <button onclick="requestCPU()">CPU 사용량 요청</button>
+  <p id="status">🕐 명령 대기 중...</p>
+
+  <script>
+    function requestCPU() {
+      document.getElementById("status").textContent = "📤 명령 전송 중...";
+      fetch('/send-command/cpu')
+        .then(res => res.json())
+        .then(() => {
+          waitForResult(); // 결과 기다리기 시작
+        });
+    }
+
+    function waitForResult() {
+      let tries = 0;
+      const interval = setInterval(() => {
+        fetch('/latest-result')
+          .then(res => res.json())
+          .then(data => {
+            if (data.cpu_usage) {
+              document.getElementById("status").textContent =
+                `✅ CPU 사용률: ${data.cpu_usage}`;
+              clearInterval(interval);
+            } else {
+              tries++;
+              if (tries >= 10) {
+                document.getElementById("status").textContent = "⏳ 응답 지연 중...";
+                clearInterval(interval);
+              }
+            }
+          });
+      }, 1000); // 1초 간격으로 결과 확인
+    }
+  </script>
+</body>
+</html>
