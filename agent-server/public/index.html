@@ -6,15 +6,26 @@
 </head>
 <body>
   <h1>📡 서버 제어 패널</h1>
-  <button onclick="sendCommand('cpu')">CPU 사용량</button>
-  <button onclick="sendCommand('snmp-check')">SNMP 점검</button>
+
+  <label>
+    <input type="checkbox" id="ftpException" />
+    예외
+  </label>
   <button onclick="sendCommand('ftp-check')">FTP 점검</button>
 
   <p id="status">🕐 대기 중...</p>
 
   <script>
     function sendCommand(cmd) {
+      const isFtpException = document.getElementById('ftpException').checked;
+
+      if (cmd === 'ftp-check' && isFtpException) {
+        document.getElementById("status").textContent = "✅ 예외 처리됨 (점검 생략)";
+        return; // 실제 명령 전송 생략
+      }
+
       document.getElementById("status").textContent = `[${cmd}] 명령 전송 중...`;
+
       fetch(`/send-command/${cmd}`)
         .then(() => setTimeout(fetchResult, 4000));
     }
