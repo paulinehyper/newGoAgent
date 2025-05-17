@@ -41,6 +41,9 @@
   <h1>➕ 템플릿 일괄 추가</h1>
 
   <form id="templateForm">
+    <label>Template Name:</label>
+    <input type="text" name="templatename" maxlength="100" required />
+
     <label>Server Name:</label>
     <input type="text" name="serverName" required />
 
@@ -86,19 +89,27 @@
       tbody.appendChild(tr);
     });
 
+    function generateTemplateId() {
+      return 'tmpl-' + Math.random().toString(36).substring(2, 10);
+    }
+
     document.getElementById("templateForm").addEventListener("submit", async function (e) {
       e.preventDefault();
 
       const formData = new FormData(this);
       const checkedIndexes = formData.getAll('vulnCheck');
 
+      const templatename = formData.get("templatename");
       const serverName = formData.get("serverName");
       const hostName = formData.get("hostName");
       const ip = formData.get("ip");
+      const templateid = generateTemplateId();
 
       const selectedTemplates = checkedIndexes.map(index => {
         const i = parseInt(index);
         return {
+          templateid,
+          templatename,
           vulnid: vulnData[i].vulnid,
           serverName,
           hostName,
