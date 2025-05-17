@@ -3,39 +3,88 @@
 <head>
   <meta charset="UTF-8" />
   <title>에이전트 보안 점검</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    .result-box {
+      margin-top: 30px;
+      border-top: 1px solid #ccc;
+      padding-top: 15px;
+    }
+    .item {
+      margin-bottom: 15px;
+    }
+    button {
+      margin: 5px 10px 5px 0;
+      padding: 10px 15px;
+    }
+    label {
+      font-weight: bold;
+      margin-right: 10px;
+    }
+  </style>
 </head>
 <body>
   <h1>📡 서버 제어 패널</h1>
 
-  <label>
-    <input type="checkbox" id="ftpException" />
-    예외
-  </label>
-  <button onclick="sendCommand('ftp-check')">FTP 점검</button>
+  <div>
+    <label>
+      <input type="checkbox" id="ftpException" />
+      FTP 예외 (점검 생략)
+    </label>
+    <button onclick="sendCommand('ftp-check')">FTP 점검</button>
+    <button onclick="sendCommand('snmp-check')">SNMP 점검</button>
+    <button onclick="sendCommand('cpu')">CPU 점검</button>
+  </div>
 
-  <p id="status">🕐 대기 중...</p>
+  <div>
+    <button onclick="location.href='/newtemplate.html'">➕ 템플릿 추가</button>
+  </div>
+
+  <div class="result-box" id="results">
+    <h2>🧾 점검 결과</h2>
+    <div id="ftp-check" class="item"><strong>FTP:</strong> ⏳ 대기 중...</div>
+    <div id="snmp-check" class="item"><strong>SNMP:</strong> ⏳ 대기 중...</div>
+    <div id="cpu" class="item"><strong>CPU:</strong> ⏳ 대기 중...</div>
+  </div>
 
   <script>
     function sendCommand(cmd) {
-      const isFtpException = document.getElementById('ftpException').checked;
-
-      if (cmd === 'ftp-check' && isFtpException) {
-        document.getElementById("status").textContent = "✅ 예외 처리됨 (점검 생략)";
-        return; // 실제 명령 전송 생략
+      if (cmd === 'ftp-check' && document.getElementById('ftpException').checked) {
+        document.getElementById('ftp-check').innerHTML =
+          "<strong>FTP:</strong> ✅ 예외 처리됨 (점검 생략)";
+        return;
       }
 
-      document.getElementById("status").textContent = `[${cmd}] 명령 전송 중...`;
+      document.getElementById(cmd).innerHTML =
+        `<strong>${cmd.toUpperCase()}:</strong> 🕐 명령 전송 중...`;
 
       fetch(`/send-command/${cmd}`)
-        .then(() => setTimeout(fetchResult, 4000));
+        .then(() => setTimeout(() => fetchResult(cmd), 4000));
     }
 
-    function fetchResult() {
+    function fetchResult(cmd) {
       fetch('/latest-result')
         .then(res => res.json())
         .then(data => {
-          const result = data.result || data.cpu_usage || "⏳ 결과 없음";
-          document.getElementById("status").textContent = `📥 결과: ${result}`;
+          if (data[cmd]) {
+            document.getElementById(cmd).innerHTML =
+              `<strong>${cmd.toUpperCase()}:</strong> ${data[cmd]}`;
+          } else {
+            document.getElementById(cmd).innerHTML =
+              `<strong>${cmd.toUpperCase()}:</strong> ⏳ 결과 없음`;
+          }
+        })
+        .catch(err => {
+          document.getElementById(cmd).innerHTML =
+            `<strong>${cmd.toUpperCase()}:</strong> ❌ 오류: ${err}`;
         });
     }
   </script>

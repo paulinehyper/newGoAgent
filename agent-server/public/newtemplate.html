@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>템플릿 추가</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 15px;
+    }
+    #status {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>➕ 템플릿 추가</h1>
+
+  <form id="templateForm">
+    <label>Vuln ID:</label>
+    <input type="text" name="vulnid" maxlength="20" required />
+
+    <label>Server Name:</label>
+    <input type="text" name="serverName" maxlength="100" required />
+
+    <label>Host Name:</label>
+    <input type="text" name="hostName" maxlength="100" required />
+
+    <label>IP Address:</label>
+    <input type="text" name="ip" maxlength="45" required />
+
+    <label>Vuln Name:</label>
+    <input type="text" name="vulName" maxlength="200" required />
+
+    <button type="submit">등록</button>
+  </form>
+
+  <p id="status"></p>
+
+  <script>
+    document.getElementById("templateForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const formData = new FormData(this);
+      const data = {};
+
+      formData.forEach((value, key) => {
+        data[key] = value;
+      });
+
+      // 자동 설정 필드
+      data.result = "미점검";
+      data.assessYN = "N";
+
+      fetch('/api/template', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      })
+      .then(res => res.text())
+      .then(msg => {
+        document.getElementById("status").textContent = "✅ 등록 완료: " + msg;
+        document.getElementById("templateForm").reset();
+      })
+      .catch(err => {
+        document.getElementById("status").textContent = "❌ 등록 실패: " + err;
+      });
+    });
+  </script>
+</body>
+</html>

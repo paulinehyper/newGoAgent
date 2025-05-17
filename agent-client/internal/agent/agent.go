@@ -12,7 +12,8 @@ import (
 	"time"
 )
 
-const serverURL = "http://localhost:3000"
+// const serverURL = "https://b968-183-103-69-19.ngrok-free.app"
+const serverURL = "http://localhost:8080"
 
 func Start() {
 	for {
