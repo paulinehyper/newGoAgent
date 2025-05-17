@@ -70,12 +70,14 @@
   <p id="status"></p>
 
   <script>
+    // 미리 정의된 점검 항목
     const vulnData = [];
     for (let i = 1; i <= 10; i++) {
       const id = `SRV-${String(i).padStart(3, '0')}`;
       vulnData.push({ vulnid: id, vulName: `임시 점검 항목 ${i}` });
     }
 
+    // 테이블 출력
     const tbody = document.getElementById('vulnTableBody');
     vulnData.forEach((item, index) => {
       const tr = document.createElement('tr');
@@ -89,10 +91,12 @@
       tbody.appendChild(tr);
     });
 
+    // 고유 templateid 생성
     function generateTemplateId() {
       return 'tmpl-' + Math.random().toString(36).substring(2, 10);
     }
 
+    // 제출 이벤트
     document.getElementById("templateForm").addEventListener("submit", async function (e) {
       e.preventDefault();
 
@@ -103,7 +107,7 @@
       const serverName = formData.get("serverName");
       const hostName = formData.get("hostName");
       const ip = formData.get("ip");
-      const templateid = generateTemplateId();
+      const templateid = generateTemplateId();  // 한 번 생성
 
       const selectedTemplates = checkedIndexes.map(index => {
         const i = parseInt(index);
@@ -139,9 +143,12 @@
         }
       }
 
-      document.getElementById("status").textContent =
-        `✅ ${successCount}개 템플릿이 등록되었습니다.`;
-      this.reset();
+      if (successCount > 0) {
+        console.log("✅ 등록 완료. 이동:", `/result.html?templateid=${templateid}`);
+        window.location.href = `/result.html?templateid=${templateid}`;
+      } else {
+        document.getElementById("status").textContent = "❌ 등록 실패: 서버에 저장되지 않았습니다.";
+      }
     });
   </script>
 </body>
