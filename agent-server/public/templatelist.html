@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>템플릿 목록</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 1000px;
+      margin: auto;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 8px 12px;
+      border: 1px solid #ccc;
+      text-align: left;
+    }
+    th {
+      background-color: #f3f3f3;
+    }
+    #status {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>📋 등록된 템플릿 목록</h1>
+
+  <div id="status">⏳ 불러오는 중...</div>
+  <table id="templateTable" style="display:none;">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Vuln ID</th>
+        <th>Server Name</th>
+        <th>Host Name</th>
+        <th>IP</th>
+        <th>Vuln Name</th>
+        <th>Result</th>
+        <th>Assess</th>
+        <th>Create Time</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    fetch('/api/template/list')
+      .then(res => res.json())
+      .then(data => {
+        const table = document.getElementById('templateTable');
+        const tbody = table.querySelector('tbody');
+        const status = document.getElementById('status');
+
+        if (data.length === 0) {
+          status.textContent = "📭 등록된 템플릿이 없습니다.";
+          return;
+        }
+
+        data.forEach(row => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${row.id}</td>
+            <td>${row.vulnid}</td>
+            <td>${row.servername}</td>
+            <td>${row.hostname}</td>
+            <td>${row.ip}</td>
+            <td>${row.vulname}</td>
+            <td>${row.result}</td>
+            <td>${row.assessyn}</td>
+            <td>${row.createtime}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        status.style.display = 'none';
+        table.style.display = 'table';
+      })
+      .catch(err => {
+        document.getElementById('status').textContent = "❌ 데이터 불러오기 실패: " + err;
+      });
+  </script>
+</body>
+</html>

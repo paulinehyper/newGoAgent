@@ -85,6 +85,18 @@ app.post('/api/template', async (req, res) => {
   }
 });
 
+// 템플릿 목록 조회 API
+app.get('/api/template/list', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM template ORDER BY id DESC');
+    res.json(result.rows);
+  } catch (err) {
+    console.error("❌ 템플릿 목록 조회 실패:", err);
+    res.status(500).send("DB 오류");
+  }
+});
+
+
 // 서버 실행
 app.listen(port, () => {
   console.log(`✅ 서버 실행 중: http://localhost:${port}`);

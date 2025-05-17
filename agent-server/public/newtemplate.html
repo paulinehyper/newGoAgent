@@ -2,55 +2,64 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>템플릿 추가</title>
+  <title>템플릿 일괄 추가</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       padding: 20px;
-      max-width: 600px;
+      max-width: 800px;
       margin: auto;
     }
     h1 {
       margin-bottom: 20px;
     }
     label {
-      display: block;
-      margin-top: 10px;
       font-weight: bold;
     }
-    input {
+    input, button {
       width: 100%;
       padding: 8px;
-      margin-top: 5px;
+      margin: 5px 0 15px;
     }
-    button {
-      margin-top: 20px;
-      padding: 10px 15px;
+    table {
+      width: 100%;
+      border-collapse: collapse;
     }
-    #status {
-      margin-top: 20px;
-      font-weight: bold;
+    th, td {
+      padding: 8px;
+      border: 1px solid #ccc;
+    }
+    th {
+      background-color: #f0f0f0;
+    }
+    .center {
+      text-align: center;
     }
   </style>
 </head>
 <body>
-  <h1>➕ 템플릿 추가</h1>
+  <h1>➕ 템플릿 일괄 추가</h1>
 
   <form id="templateForm">
-    <label>Vuln ID:</label>
-    <input type="text" name="vulnid" maxlength="20" required />
-
     <label>Server Name:</label>
-    <input type="text" name="serverName" maxlength="100" required />
+    <input type="text" name="serverName" required />
 
     <label>Host Name:</label>
-    <input type="text" name="hostName" maxlength="100" required />
+    <input type="text" name="hostName" required />
 
     <label>IP Address:</label>
-    <input type="text" name="ip" maxlength="45" required />
+    <input type="text" name="ip" required />
 
-    <label>Vuln Name:</label>
-    <input type="text" name="vulName" maxlength="200" required />
+    <table>
+      <thead>
+        <tr>
+          <th class="center">✔</th>
+          <th>Vuln ID</th>
+          <th>Vuln Name</th>
+        </tr>
+      </thead>
+      <tbody id="vulnTableBody"></tbody>
+    </table>
 
     <button type="submit">등록</button>
   </form>
@@ -58,35 +67,70 @@
   <p id="status"></p>
 
   <script>
-    document.getElementById("templateForm").addEventListener("submit", function (e) {
+    const vulnData = [];
+    for (let i = 1; i <= 10; i++) {
+      const id = `SRV-${String(i).padStart(3, '0')}`;
+      vulnData.push({ vulnid: id, vulName: `임시 점검 항목 ${i}` });
+    }
+
+    const tbody = document.getElementById('vulnTableBody');
+    vulnData.forEach((item, index) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="center">
+          <input type="checkbox" name="vulnCheck" value="${index}" checked>
+        </td>
+        <td>${item.vulnid}</td>
+        <td>${item.vulName}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    document.getElementById("templateForm").addEventListener("submit", async function (e) {
       e.preventDefault();
 
       const formData = new FormData(this);
-      const data = {};
+      const checkedIndexes = formData.getAll('vulnCheck');
 
-      formData.forEach((value, key) => {
-        data[key] = value;
+      const serverName = formData.get("serverName");
+      const hostName = formData.get("hostName");
+      const ip = formData.get("ip");
+
+      const selectedTemplates = checkedIndexes.map(index => {
+        const i = parseInt(index);
+        return {
+          vulnid: vulnData[i].vulnid,
+          serverName,
+          hostName,
+          ip,
+          vulName: vulnData[i].vulName,
+          result: "미점검",
+          assessYN: "N"
+        };
       });
 
-      // 자동 설정 필드
-      data.result = "미점검";
-      data.assessYN = "N";
+      if (selectedTemplates.length === 0) {
+        document.getElementById("status").textContent = "⚠️ 최소 1개 이상 항목을 선택해야 합니다.";
+        return;
+      }
 
-      fetch('/api/template', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-      })
-      .then(res => res.text())
-      .then(msg => {
-        document.getElementById("status").textContent = "✅ 등록 완료: " + msg;
-        document.getElementById("templateForm").reset();
-      })
-      .catch(err => {
-        document.getElementById("status").textContent = "❌ 등록 실패: " + err;
-      });
+      let successCount = 0;
+      for (const tmpl of selectedTemplates) {
+        try {
+          const res = await fetch('/api/template', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(tmpl)
+          });
+          if (res.ok) successCount++;
+        } catch (err) {
+          console.error("❌ 전송 실패:", err);
+        }
+      }
+
+      document.getElementById("status").textContent =
+        `✅ ${successCount}개 템플릿이 등록되었습니다.`;
+      this.reset();
     });
   </script>
 </body>
